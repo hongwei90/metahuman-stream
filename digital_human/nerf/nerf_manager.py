@@ -28,3 +28,15 @@ class NeRFManager:
         if key in self.instances:
             print(f"Removing NeRF instance for order: {order_id}, user: {user_id}")
             del self.instances[key]
+
+    def get_or_create_instance(self, order_id, user_id, config):
+        key = self.get_instance_key(order_id, user_id)
+        if key not in self.instances:
+            self.instances[key] = NeRFEnvironment(config)
+        return self.instances[key]
+
+    def release_instance(self, order_id, user_id):
+        key = self.get_instance_key(order_id, user_id)
+        if key in self.instances:
+            self.instances[key].release_resources()
+            del self.instances[key]
