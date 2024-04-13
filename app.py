@@ -315,25 +315,33 @@ if __name__ == '__main__':
     seed_everything(opt.seed)
     print(opt)
 
+    # ############################################模型和环境准备############################################################################
+    # 设置设备（GPU或CPU）
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    # 初始化和配置模型
     model = NeRFNetwork(opt)
 
+    # 创建损失函数和训练器
     criterion = torch.nn.MSELoss(reduction='none')
     metrics = [] # use no metric in GUI for faster initialization...
     print(model)
     trainer = Trainer('ngp', opt, model, device=device, workspace=opt.workspace, criterion=criterion, fp16=opt.fp16, metrics=metrics, use_checkpoint=opt.ckpt)
 
+    # 准备数据加载器
     test_loader = NeRFDataset_Test(opt, device=device).dataloader()
     model.aud_features = test_loader._data.auds
     model.eye_areas = test_loader._data.eye_area
+    # ############################################模型和环境准备############################################################################
 
+    # ############################################ 启动渲染线程#############################################################################
     # we still need test_loader to provide audio features for testing.
     nerfreal = NeRFReal(opt, trainer, test_loader)
     #txt_to_audio('我是中国人,我来自北京')
     rendthrd = Thread(target=render)
     rendthrd.start()
+    # ############################################ 启动渲染线程#############################################################################
 
-    #############################################################################
+
     print('start websocket server')
 
     server = pywsgi.WSGIServer(('0.0.0.0', 8000), app, handler_class=WebSocketHandler)
