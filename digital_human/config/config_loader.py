@@ -3,6 +3,7 @@
 import json
 import os
 
+
 class ConfigLoader:
     def __init__(self, config_directory, default_config=None):
         self.config_directory = config_directory

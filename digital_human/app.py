@@ -16,6 +16,7 @@ sockets = Sockets(app)
 # 初始化数字人管理器
 nerf_manager = NeRFManager()
 
+
 # WebSocket 路由
 @sockets.route('/human')
 def human_socket(ws):
@@ -30,9 +31,10 @@ def human_socket(ws):
 
     # 实例化连接处理器并处理会话
     handler = ConnectionHandler(ws, nerf_manager)
-    handler.handle_session(order_id)
+    handler.handle_session(order_id, "honwee")
+
 
 # 启动 WebSocket 服务器
 if __name__ == '__main__':
-    server = pywsgi.WSGIServer(('0.0.0.0', 8800), app, handler_class=WebSocketHandler)
+    server = pywsgi.WSGIServer(('127.0.0.1', 8800), app, handler_class=WebSocketHandler)
     server.serve_forever()

@@ -1,0 +1,49 @@
+@startuml
+skinparam style strictly
+
+actor 客户端 as Client
+entity "WebSocket服务器" as WSServer
+entity "JWT认证服务" as JWTAuth
+database "配置文件" as ConfigFiles
+entity "数字人实例管理器" as NeRFManager
+entity "数字人实例" as NeRFInstance
+entity "WebSocket连接处理器" as WSHandler
+
+Client -> WSServer : 发起连接请求带有JWT, order_id和user_id
+WSServer -> JWTAuth : 解析并验证JWT令牌
+JWTAuth --> WSServer : 验证结果
+alt 验证成功
+    WSServer -> ConfigFiles : 根据order_id请求配置
+    ConfigFiles -> WSServer : 返回配置数据
+    WSServer -> NeRFManager : 根据配置初始化NeRF实例（使用order_id + user_id作为键）
+    NeRFManager -> NeRFInstance : 创建并配置数字人实例
+    NeRFInstance -> WSHandler : 开始WebSocket会话管理
+    WSHandler -> Client : 发送状态和生成的推流地址 (http://$host:$port/live/livestream_{order_id}_{user_id}.flv)
+else 验证失败
+    WSServer -> Client : 发送错误消息
+end
+
+group 多用户并发会话
+    loop 每个WebSocket连接
+        Client -> WSHandler : 发送指令或心跳消息
+        WSHandler -> NeRFInstance : 如果是指令则处理
+        alt 心跳消息
+            WSHandler -> Client : 发送心跳确认
+        else 指令消息
+            NeRFInstance -> WSHandler : 指令反馈
+            WSHandler -> Client : 发送指令处理状态和数据
+        end
+    end
+end
+
+@enduml
+
+
+'1.客户端通过带有 JWT 和订单号的请求发起 WebSocket 连接。
+'2.WebSocket 服务器解析并验证 JWT 令牌的有效性。
+'3.如果 JWT 令牌验证成功，服务器根据订单号请求相应的配置文件。
+'4.配置文件返回后，服务器初始化对应的数字人 NeRF 实例。
+'5.数字人实例创建完成后，开始管理 WebSocket 会话，并向客户端发送状态和推流地址。
+'6.客户端在会话中可以发送指令或心跳消息。
+'7.服务器处理收到的心跳消息，返回确认信息。
+'8.如果收到的是指令消息，数字人实例将处理该指令，并将结果反馈给客户端。
