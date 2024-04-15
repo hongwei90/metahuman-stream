@@ -3,13 +3,15 @@
 from digital_human.config import ConfigLoader
 from digital_human.nerf.nerf_environment import NeRFEnvironment
 
+from threading import Thread
+
 
 class NeRFManager:
     def __init__(self):
         # 使用字典来存储不同用户的 NeRF 实例
         self.instances = {}
-        self.config_loader = ConfigLoader(config_directory="./data/conf",
-                                          default_config="/data/conf/default_config.json")
+        self.config_loader = ConfigLoader(config_directory="/home/test/Code/honwee/metahuman-stream/digital_human/data/conf",
+                                          default_config="/home/test/Code/honwee/metahuman-stream/digital_human/data/conf/default_config.json")
 
     def get_instance_key(self, order_id, user_id):
         # 创建基于订单号和用户ID的唯一键
@@ -30,11 +32,13 @@ class NeRFManager:
         # 这里实现数字人实例的创建逻辑
         try:
             config = self.config_loader.load_config(order_id)
-            nerf_env = NeRFEnvironment(config)
+            nerf_env = NeRFEnvironment(config,self.config_loader.default_settings)
             # 初始化模型并渲染
             nerf_env.initialize_model()
-            nerf_env.render()
-            return nerf_env
+
+            rendthrd = Thread(target=nerf_env.render)
+            rendthrd.start()
+            return nerf_env.instance
         except Exception as e:
             print(f"Error creating NeRF instance: {e}")
             return f"Error creating NeRF instance: {e}"

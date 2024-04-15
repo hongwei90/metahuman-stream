@@ -26,7 +26,7 @@ class ConfigLoader:
 
     def load_config(self, order_id):
         # 为给定的订单ID构建配置文件路径
-        config_path = os.path.join(self.config_directory, f"{order_id}.json")
+        config_path = os.path.join(self.config_directory, f"{order_id}_config.json")
 
         # 尝试读取配置文件
         try:

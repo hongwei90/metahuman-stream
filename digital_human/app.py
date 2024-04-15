@@ -36,5 +36,5 @@ def human_socket(ws):
 
 # 启动 WebSocket 服务器
 if __name__ == '__main__':
-    server = pywsgi.WSGIServer(('127.0.0.1', 8800), app, handler_class=WebSocketHandler)
+    server = pywsgi.WSGIServer(('0.0.0.0', 8800), app, handler_class=WebSocketHandler)
     server.serve_forever()
