@@ -4,7 +4,8 @@ from nerf_triplane.utils import *
 from nerf_triplane.network import NeRFNetwork
 from nerfreal import NeRFReal
 
-
+import requests
+from typing import Iterator
 
 class NeRFEnvironment:
     def __init__(self, config, default_settings):
@@ -44,7 +45,7 @@ class NeRFEnvironment:
 
     def process_command(self, command):
         # 处理从 WebSocket 接收到的命令
-        
+        txt_to_audio("hello!",self.instance)
         print(f"Processing command: {command}")
         # 返回处理结果
         return f"Processed {command}"
@@ -63,6 +64,45 @@ class NeRFEnvironment:
         # 实际中可能需要调用模型的清理方法
         pass
 
+def xtts(text, speaker, server_url) -> Iterator[bytes]:
+        # 从speaker字典中提取character和emotion，如果没有提供，则使用默认值
+        # character = speaker.get('character', '默认角色')
+        # emotion = speaker.get('emotion', 'default')
+
+        # 构建POST请求的body
+        data = {
+            "character": "eileen",
+            "emotion": "default",
+            "text": text,
+            "stream": "true",
+            # 根据需要添加其他参数
+        }
+
+        try:
+            # 发送POST请求到声音克隆服务
+            response = requests.post(server_url + '/tts', json=data)
+            if response.status_code == 200:
+                # 返回音频流
+                for chunk in response.iter_content(chunk_size=1024):
+                    yield chunk
+            else:
+                print(f"声音克隆服务调用失败，状态码：{response.status_code}")
+        except Exception as e:
+            print(f"调用声音克隆服务出错: {e}")
+
+def stream_xtts(audio_stream, render):
+    for chunk in audio_stream:
+        if chunk is not None:
+            render.push_audio(chunk)
+
+def txt_to_audio(text_, nerfreal):
+    print("2222222222222222222222222222")
+    audio_stream = xtts(
+        text_,
+        "",
+        "http://localhost:5000"  # 假设你的本地声音克隆服务运行在这个地址
+    )
+    stream_xtts(audio_stream, nerfreal)
 
 class Config:
     def __init__(self, **entries):

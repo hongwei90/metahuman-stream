@@ -23,7 +23,6 @@ class NeRFManager:
         key = self.get_instance_key(order_id, user_id)
         if key not in self.instances:
             self.instances[key] = self.create_instance(order_id, user_id)
-            print(self.instances)
         return self.instances[key]
 
     def create_instance(self, order_id, user_id):
@@ -38,7 +37,7 @@ class NeRFManager:
 
             rendthrd = Thread(target=nerf_env.render)
             rendthrd.start()
-            return nerf_env.instance
+            return nerf_env
         except Exception as e:
             print(f"Error creating NeRF instance: {e}")
             return f"Error creating NeRF instance: {e}"
